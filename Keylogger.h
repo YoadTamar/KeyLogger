@@ -91,7 +91,7 @@ void persistence();
  *
  * @note Uses a static variable to remember the last active window title.
  */
- void updateWindowTitle()
+ void updateWindowTitle();
 
 /**
  * Hides the console window.
