@@ -10,7 +10,7 @@
 #include <string.h>
 
 /* Defines */
-#define LOGFILE "log.txt"
+#define LOGFILE "filelog.txt"
 #define KEY_PRESSED 0x8000
 #define CAPSLOCK_MASK 0x0001
 #define KEY_CODE_MIN 8

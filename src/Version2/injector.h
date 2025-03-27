@@ -3,6 +3,11 @@
 
 #include <windows.h>
 #include <stdio.h>
+#include <ctype.h>
+#include <stdlib.h>
+#include <sys/stat.h>
+#include <direct.h>
+#include <string.h>
 
 #define LOGFILE "log.txt"
 #define OLDFILE "injector.exe"

